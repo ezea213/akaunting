@@ -7,7 +7,9 @@ use App\Interfaces\Listener\ShouldUpdateAllCompanies;
 use App\Models\Module\Module;
 use App\Traits\Modules;
 use App\Utilities\Console;
+use App\Utilities\Versions;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 
 class FinishUpdate extends Job
@@ -81,6 +83,8 @@ class FinishUpdate extends Job
         $listener = $this->getListenerTypeOfModule();
 
         if ($listener == 'none') {
+            Artisan::call('cache:clear');
+
             return [];
         }
 
@@ -111,8 +115,7 @@ class FinishUpdate extends Job
             // Thank you PSR-4
             $class = '\Modules\\' . $module->getStudlyName() . str_replace('/', '\\', $path);
 
-            // Skip if listener is same or lower than old version
-            if (version_compare($class::VERSION, $this->old, '<=')) {
+            if (! Versions::shouldUpdate($class::VERSION, $this->old, $this->new)) {
                 continue;
             }
 

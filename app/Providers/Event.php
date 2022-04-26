@@ -39,12 +39,18 @@ class Event extends Provider
             'App\Listeners\Update\V21\Version2125',
             'App\Listeners\Update\V21\Version2126',
             'App\Listeners\Update\V21\Version2127',
+            'App\Listeners\Update\V21\Version2133',
+            'App\Listeners\Update\V21\Version2134',
         ],
         'Illuminate\Auth\Events\Login' => [
             'App\Listeners\Auth\Login',
         ],
         'Illuminate\Auth\Events\Logout' => [
             'App\Listeners\Auth\Logout',
+        ],
+        //'Illuminate\Console\Events\ScheduledTaskStarting' => [
+        'Illuminate\Console\Events\CommandStarting' => [
+            'App\Listeners\Common\SkipScheduleInReadOnlyMode',
         ],
         'App\Events\Auth\LandingPageShowing' => [
             'App\Listeners\Auth\AddLandingPages',

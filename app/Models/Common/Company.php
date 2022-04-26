@@ -81,13 +81,17 @@ class Company extends Eloquent implements Ownable
     {
         parent::boot();
 
-        static::retrieved(function($model) {
-            $model->setCommonSettingsAsAttributes();
-        });
+        try { // TODO will optimize..
+            static::retrieved(function($model) {
+                $model->setCommonSettingsAsAttributes();
+            });
 
-        static::saving(function($model) {
-            $model->unsetCommonSettingsFromAttributes();
-        });
+            static::saving(function($model) {
+                $model->unsetCommonSettingsFromAttributes();
+            });
+        } catch(\Throwable $e) {
+            
+        }
     }
 
     public function documents()
@@ -267,7 +271,7 @@ class Company extends Eloquent implements Ownable
 
     public function users()
     {
-        return $this->morphedByMany('App\Models\Auth\User', 'user', 'user_companies', 'company_id', 'user_id');
+        return $this->belongsToMany('App\Models\Auth\User', 'App\Models\Auth\UserCompany');
     }
 
     public function vendors()
@@ -282,57 +286,65 @@ class Company extends Eloquent implements Ownable
 
     public function setCommonSettingsAsAttributes()
     {
-        $settings = $this->settings;
+        try { // TODO will optimize..
+            $settings = $this->settings;
 
-        $groups = [
-            'company',
-            'default',
-        ];
+            $groups = [
+                'company',
+                'default',
+            ];
 
-        foreach ($settings as $setting) {
-            list($group, $key) = explode('.', $setting->getAttribute('key'));
+            foreach ($settings as $setting) {
+                list($group, $key) = explode('.', $setting->getAttribute('key'));
 
-            // Load only general settings
-            if (!in_array($group, $groups)) {
-                continue;
+                // Load only general settings
+                if (!in_array($group, $groups)) {
+                    continue;
+                }
+
+                $value = $setting->getAttribute('value');
+
+                if (($key == 'logo') && empty($value)) {
+                    $value = 'public/img/company.png';
+                }
+
+                $this->setAttribute($key, $value);
             }
 
-            $value = $setting->getAttribute('value');
-
-            if (($key == 'logo') && empty($value)) {
-                $value = 'public/img/company.png';
+            // Set default default company logo if empty
+            if ($this->getAttribute('logo') == '') {
+                $this->setAttribute('logo', 'public/img/company.png');
             }
-
-            $this->setAttribute($key, $value);
-        }
-
-        // Set default default company logo if empty
-        if ($this->getAttribute('logo') == '') {
-            $this->setAttribute('logo', 'public/img/company.png');
+        } catch(\Throwable $e) {
+            
         }
     }
 
     public function unsetCommonSettingsFromAttributes()
     {
-        $settings = $this->settings;
+        try { // TODO will optimize..
+            $settings = $this->settings;
 
-        $groups = [
-            'company',
-            'default',
-        ];
+            $groups = [
+                'company',
+                'default',
+            ];
 
-        foreach ($settings as $setting) {
-            list($group, $key) = explode('.', $setting->getAttribute('key'));
+            foreach ($settings as $setting) {
+                list($group, $key) = explode('.', $setting->getAttribute('key'));
 
-            // Load only general settings
-            if (!in_array($group, $groups)) {
-                continue;
+                // Load only general settings
+                if (!in_array($group, $groups)) {
+                    continue;
+                }
+
+                $this->offsetUnset($key);
             }
 
-            $this->offsetUnset($key);
+            $this->offsetUnset('logo');
+        } catch(\Throwable $e) {
+            
         }
-
-        $this->offsetUnset('logo');
     }
 
     /**
